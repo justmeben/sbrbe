@@ -85,6 +85,10 @@ class CreateVoteView(APIView):
         if not game_id:
             return Response('Game required', 400)
 
+        player_id = request.data.get('player')
+        if not player_id:
+            return Response('Player required', 400)
+
         target_id = request.data.get('target')
         if not target_id:
             return Response('target required', 400)
@@ -94,23 +98,33 @@ class CreateVoteView(APIView):
         except Game.DoesNotExist:
             return Response({'msg': 'Game not found'}, 400)
 
-        if game.vote_yes_count != -1:
+        try:
+            player = Player.objects.get(id=player_id)
+        except Player.DoesNotExist:
+            return Response({'msg': 'Player not found'}, 400)
+
+        if game.vote_start_time:
             return Response({'msg': 'vote already in progress'}, 400)
 
         game.vote_start_time = datetime.now()
         game.vote_target_id = target_id
-        game.vote_yes_count = 1
-        game.vote_count = 1
         game.save()
+        player.vote = 1
+        player.save()
+
         return Response()
 
 
 class VoteView(APIView):
     def post(self, request):
-        # Optional for later: validate player is alive and didnt already vote
+        # Optional for later: validate player didnt already vote
         game_id = request.data.get('game')
         if not game_id:
             return Response('Game required', 400)
+
+        player_id = request.data.get('player')
+        if not player_id:
+            return Response('Player required', 400)
 
         if 'is_yes' not in request.data.keys():
             return Response('is_yes required', 400)
@@ -121,15 +135,25 @@ class VoteView(APIView):
         except Game.DoesNotExist:
             return Response({'msg': 'Game not found'}, 400)
 
-        game.vote_count += 1
-        if is_yes:
-            game.vote_yes_count += 1
+        try:
+            player = Player.objects.get(id=player_id)
+        except Player.DoesNotExist:
+            return Response({'msg': 'Player not found'}, 400)
 
-        game.save()
+        if player.vote != -1:
+            return Response({'msg': 'Player already voted'}, 400)
+
+        if player.id == game.vote_target_id:
+            return Response({'msg': 'Cannot vote for self'}, 400)
+
+        player.vote = 1 if is_yes else 0
+        player.save()
 
         total_count = Player.objects.filter(game=game, is_alive=True).count()
-        if game.vote_count >= total_count:
-            if game.vote_yes_count > total_count / 2:
+        vote_count = Player.objects.filter(game=game, is_alive=True).exclude(vote=-1).count()
+        vote_yes_count = Player.objects.filter(game=game, is_alive=True, vote=1).count()
+        if vote_yes_count > total_count / 2 or vote_count >= total_count - 1:
+            if vote_yes_count > total_count / 2:
                 game.vote_target.is_alive = False
                 game.vote_target.save()
 
@@ -141,8 +165,7 @@ class VoteView(APIView):
                 elif villian_count >= civilian_count:
                     game.phase = 4
 
-            game.vote_yes_count = -1
-            game.vote_count = -1
+            Player.objects.filter(game=game).update(vote=-1)
             game.vote_target = None
             game.vote_start_time = None
             game.save()

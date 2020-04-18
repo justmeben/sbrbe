@@ -25,7 +25,7 @@ SECRET_KEY = ')bahh$bb!%gm)804v@a0zkgpp95bezeh$43e&xb^mil8ynij6s'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['game.bengo.io', '34.243.245.127', '127.0.0.1']
 
 
 # Application definition
@@ -53,7 +53,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-CORS_ORIGIN_WHITELIST = ['http://localhost:8080', 'http://127.0.0.1:8080']
+CORS_ORIGIN_WHITELIST = ['http://localhost:8080', 'http://127.0.0.1', 'http://game.bengo.io', 'http://34.243.245.127']
 
 
 ROOT_URLCONF = 'sbr.urls'
