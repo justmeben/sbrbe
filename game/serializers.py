@@ -8,7 +8,7 @@ class PlayerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Player
-        fields = ('id', 'name', 'is_alive', 'unknown', 'is_villian', 'vote')
+        fields = ('id', 'name', 'is_alive', 'unknown', 'is_villian', 'vote', 'last_voted_date')
 
     def get_unknown(self, player):
         return player.is_alive
@@ -18,7 +18,7 @@ class PlayerEndGameSerializer(PlayerSerializer):
 
     class Meta:
         model = Player
-        fields = ('id', 'name', 'is_alive', 'is_villian', 'vote')
+        fields = ('id', 'name', 'is_alive', 'is_villian', 'vote', 'last_voted_date')
 
 
 class GameStateSerializer(serializers.ModelSerializer):
@@ -29,7 +29,7 @@ class GameStateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Game
-        fields = ('id', 'phase', 'vote', 'vote_target', 'vote_target_id', 'players')
+        fields = ('id', 'phase', 'vote', 'vote_target', 'vote_target_id', 'vote_creator_id', 'players', 'creator_id')
 
     def get_players(self, game):
         players = Player.objects.filter(game=game)

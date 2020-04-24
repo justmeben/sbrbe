@@ -2,7 +2,11 @@ from django.db import models
 
 
 class Game(models.Model):
+    creator = models.ForeignKey("Player", null=True, blank=True,
+                                on_delete=models.DO_NOTHING, related_name='game_created')
     phase = models.IntegerField(default=1)
+    vote_creator = models.ForeignKey("Player", null=True, blank=True,
+                                     on_delete=models.DO_NOTHING, related_name='vote_created_at')
     vote_target = models.ForeignKey("Player", null=True, blank=True,
                                     on_delete=models.DO_NOTHING, related_name='vote_target_at')
     vote_start_time = models.DateTimeField(null=True, blank=True)
@@ -14,3 +18,4 @@ class Player(models.Model):
     is_villian = models.BooleanField(default=False)
     is_alive = models.BooleanField(default=True)
     vote = models.IntegerField(default=-1)
+    last_voted_date = models.DateTimeField(null=True, blank=True)

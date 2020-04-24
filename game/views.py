@@ -19,6 +19,8 @@ class CreateGameView(APIView):
 
         game = Game.objects.create()
         player = Player.objects.create(name=name, game=game)
+        game.creator = player
+        game.save()
 
         return Response({
             'game': game.id,
@@ -106,6 +108,7 @@ class CreateVoteView(APIView):
         if game.vote_start_time:
             return Response({'msg': 'vote already in progress'}, 400)
 
+        game.vote_creator = player
         game.vote_start_time = datetime.now()
         game.vote_target_id = target_id
         game.save()
@@ -165,6 +168,8 @@ class VoteView(APIView):
                 elif villian_count >= civilian_count:
                     game.phase = 4
 
+            game.vote_target.last_voted_date = datetime.now()
+            game.vote_target.save()
             Player.objects.filter(game=game).update(vote=-1)
             game.vote_target = None
             game.vote_start_time = None
@@ -194,6 +199,7 @@ class GameStateView(APIView):
             return Response({'msg': 'Player not found'}, 400)
 
         response = {"player": PlayerEndGameSerializer(player).data,
-                    'game': GameStateSerializer(game, context={'is_villian': player.is_villian}).data}
+                    'game': GameStateSerializer(game, context={'is_villian': player.is_villian}).data,
+                    'now': datetime.now()}
 
         return Response(response)
