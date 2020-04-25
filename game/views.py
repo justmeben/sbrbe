@@ -155,8 +155,9 @@ class VoteView(APIView):
         total_count = Player.objects.filter(game=game, is_alive=True).count()
         vote_count = Player.objects.filter(game=game, is_alive=True).exclude(vote=-1).count()
         vote_yes_count = Player.objects.filter(game=game, is_alive=True, vote=1).count()
+
         if vote_yes_count > total_count / 2 or vote_count >= total_count - 1 \
-                or total_count / 2 > (total_count - 1 - vote_count) + vote_yes_count:
+                or total_count / 2 >= (total_count - 1 - vote_count) + vote_yes_count:
             if vote_yes_count > total_count / 2:
                 game.vote_target.is_alive = False
                 game.vote_target.save()
